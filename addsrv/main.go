@@ -1,7 +1,7 @@
 package main
 
 import (
-	user "addsrv/calculate"
+	"addsrv/calculate"
 	"net/http"
 	"os"
 
@@ -14,7 +14,7 @@ func main() {
 	logger = log.NewLogfmtLogger(os.Stderr)
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC, "listen", "8081", "caller", log.DefaultCaller)
 
-	r := user.NewHttpServer(user.NewService(), logger)
+	r := calculate.NewHttpServer(calculate.NewService(), logger)
 	logger.Log("msg", "HTTP", "addr", "8081")
 	logger.Log("err", http.ListenAndServe(":8081", r))
 }

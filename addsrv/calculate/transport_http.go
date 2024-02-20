@@ -1,4 +1,4 @@
-package user
+package calculate
 
 import (
 	"context"
@@ -17,22 +17,22 @@ func NewHttpServer(svc Service, logger kitlog.Logger) *mux.Router {
 		kithttp.ServerErrorEncoder(encodeErrorResponse),
 		kithttp.ServerFinalizer(newServerFinalizer(logger)),
 	}
-	validateUserHandler := kithttp.NewServer(
-		makeValidateUserEndpoint(svc),
-		decodeValidateUserRequest,
+	addHandler := kithttp.NewServer(
+		makeaddEndpoint(svc),
+		decodeaddRequest,
 		encodeResponse,
 		options...,
 	)
 
-	validateTokenHandler := kithttp.NewServer(
-		makeValidateTokenEndpoint(svc),
-		decodeValidateTokenRequest,
+	subHandler := kithttp.NewServer(
+		makesubEndpoint(svc),
+		decodesubRequest,
 		encodeResponse,
 		options...,
 	)
 	r := mux.NewRouter()
-	r.Methods("POST").Path("/v1/auth").Handler(validateUserHandler)
-	r.Methods("POST").Path("/v1/validate-token").Handler(validateTokenHandler)
+	r.Methods("POST").Path("/v1/add").Handler(addHandler)
+	r.Methods("POST").Path("/v1/sub").Handler(subHandler)
 	return r
 }
 
@@ -55,25 +55,23 @@ func encodeErrorResponse(_ context.Context, err error, w http.ResponseWriter) {
 
 func codeFrom(err error) int {
 	switch err {
-	case ErrInvalidUser:
+	case ErrIntOverflow:
 		return http.StatusNotFound
-	case ErrInvalidToken:
-		return http.StatusUnauthorized
 	default:
 		return http.StatusInternalServerError
 	}
 }
 
-func decodeValidateUserRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var request validateUserRequest
+func decodeaddRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var request addRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}
 	return request, nil
 }
 
-func decodeValidateTokenRequest(ctx context.Context, r *http.Request) (interface{}, error) {
-	var request validateTokenRequest
+func decodesubRequest(ctx context.Context, r *http.Request) (interface{}, error) {
+	var request subRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		return nil, err
 	}

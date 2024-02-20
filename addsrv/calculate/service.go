@@ -1,19 +1,18 @@
-package user
+package calculate
 
 import (
-	"addsrv/security"
 	"context"
 	"errors"
+	"math"
 )
 
 type Service interface {
-	ValidateUser(ctx context.Context, mail, password string) (string, error)
-	ValidateToken(ctx context.Context, token string) (string, error)
+	AddValue(ctx context.Context, a, b int) (int, error)
+	SubValue(ctx context.Context, a, b int) (int, error)
 }
 
 var (
-	ErrInvalidUser  = errors.New("invalid user")
-	ErrInvalidToken = errors.New("invalid token")
+	ErrIntOverflow = errors.New("integer overflow")
 )
 
 type service struct{}
@@ -22,26 +21,16 @@ func NewService() *service {
 	return &service{}
 }
 
-func (s *service) ValidateUser(ctx context.Context, email, password string) (string, error) {
-	//@TODO create validation rules, using databases or something else
-	if email == "eminetto@gmail.com" && password != "1234567" {
-		return "", ErrInvalidUser
+func (s *service) AddValue(ctx context.Context, a, b int) (int, error) {
+	if (b > 0 && a > (math.MaxInt-b)) || (b < 0 && a < (math.MinInt-b)) {
+		return 0, ErrIntOverflow
 	}
-	token, err := security.NewToken(email)
-	if err != nil {
-		return "", err
-	}
-	return token, nil
+	return a + b, nil
 }
 
-func (s *service) ValidateToken(ctx context.Context, token string) (string, error) {
-	t, err := security.ParseToken(token)
-	if err != nil {
-		return "", ErrInvalidToken
+func (s *service) SubValue(ctx context.Context, a, b int) (int, error) {
+	if (a > math.MaxInt) || (b > math.MaxInt || a < math.MinInt || b < math.MinInt) {
+		return 0, ErrIntOverflow
 	}
-	tData, err := security.GetClaims(t)
-	if err != nil {
-		return "", ErrInvalidToken
-	}
-	return tData["email"].(string), nil
+	return a - b, nil
 }

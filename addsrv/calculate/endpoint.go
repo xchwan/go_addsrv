@@ -1,48 +1,58 @@
-package user
+package calculate
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/go-kit/kit/endpoint"
 )
 
-type validateUserRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+func covint(s string) int {
+	num, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return num
 }
 
-type validateUserResponse struct {
-	Token string `json:"token,omitempty"`
+type addRequest struct {
+	A string `json:"a"`
+	B string `json:"b"`
+}
+
+type addResponse struct {
+	Value string `json:"value"`
 	Err   string `json:"err,omitempty"` // errors don't JSON-marshal, so we use a string
 }
 
-func makeValidateUserEndpoint(svc Service) endpoint.Endpoint {
+func makeaddEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(validateUserRequest)
-		token, err := svc.ValidateUser(ctx, req.Email, req.Password)
+		req := request.(addRequest)
+		value, err := svc.AddValue(ctx, covint(req.A), covint(req.B))
 		if err != nil {
-			return validateUserResponse{"", err.Error()}, err
+			return addResponse{strconv.Itoa(0), err.Error()}, err
 		}
-		return validateUserResponse{token, ""}, err
+		return addResponse{strconv.Itoa(value), ""}, err
 	}
 }
 
-type validateTokenRequest struct {
-	Token string `json:"token"`
+type subRequest struct {
+	A string `json:"a"`
+	B string `json:"b"`
 }
 
-type validateTokenResponse struct {
-	Email string `json:"email,omitempty"`
+type subResponse struct {
+	Value string `json:"value"`
 	Err   string `json:"err,omitempty"` // errors don't JSON-marshal, so we use a string
 }
 
-func makeValidateTokenEndpoint(svc Service) endpoint.Endpoint {
+func makesubEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(validateTokenRequest)
-		email, err := svc.ValidateToken(ctx, req.Token)
+		req := request.(subRequest)
+		value, err := svc.SubValue(ctx, covint(req.A), covint(req.B))
 		if err != nil {
-			return validateTokenResponse{"", err.Error()}, err
+			return subResponse{strconv.Itoa(0), err.Error()}, err
 		}
-		return validateTokenResponse{email, ""}, err
+		return subResponse{strconv.Itoa(value), ""}, err
 	}
 }
